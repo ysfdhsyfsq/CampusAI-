@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校园餐饮管理系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        h1 { color: #333; margin-bottom: 20px; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #666; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; background: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #40a9ff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #fafafa; }
+        .pagination { margin-top: 15px; text-align: center; }
+        .pagination button { margin: 0 5px; }
+        .status-pending { color: #faad14; }
+        .status-approved { color: #52c41a; }
+        .status-rejected { color: #ff4d4f; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>校园餐饮管理系统</h1>
+        
+        <div class="section">
+            <h2>商家入驻申请</h2>
+            <form id="merchantForm">
+                <div class="form-group">
+                    <label>商家名称：</label>
+                    <input type="text" id="merchantName" required>
+                </div>
+                <div class="form-group">
+                    <label>联系人：</label>
+                    <input type="text" id="contactPerson" required>
+                </div>
+                <div class="form-group">
+                    <label>联系电话：</label>
+                    <input type="tel" id="contactPhone" required>
+                </div>
+                <div class="form-group">
+                    <label>地址：</label>
+                    <input type="text" id="address" required>
+                </div>
+                <div class="form-group">
+                    <label>营业执照号：</label>
+                    <input type="text" id="businessLicense" required>
+                </div>
+                <div class="form-group">
+                    <label>商家描述：</label>
+                    <textarea id="description" rows="3"></textarea>
+                </div>
+                <button type="submit">提交申请</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>菜品分类管理</h2>
+            <div class="form-group">
+                <label>分类名称：</label>
+                <input type="text" id="categoryName">
+            </div>
+            <div class="form-group">
+                <label>排序：</label>
+                <input type="number" id="categorySort" value="1">
+            </div>
+            <button onclick="addCategory()">添加分类</button>
+            <table id="categoryTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>分类名称</th>
+                        <th>排序</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>菜品管理</h2>
+            <div class="form-group">
+                <label>菜品名称：</label>
+                <input type="text" id="dishName">
+            </div>
+            <div class="form-group">
+                <label>分类：</label>
+                <select id="dishCategory"></select>
+            </div>
+            <div class="form-group">
+                <label>价格：</label>
+                <input type="number" id="dishPrice" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>描述：</label>
+                <textarea id="dishDescription" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>图片：</label>
+                <input type="file" id="dishImage" accept="image/*">
+            </div>
+            <button onclick="addDish()">添加菜品</button>
+            
+            <div style="margin-top: 20px;">
+                <label>搜索菜品：</label>
+                <input type="text" id="searchName" placeholder="输入菜品名称">
+                <button onclick="loadDishes(1)">搜索</button>
+            </div>
+            
+            <table id="dishTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>菜品名称</th>
+                        <th>分类</th>
+                        <th>价格</th>
+                        <th>图片</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div class="pagination" id="dishPagination"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        
+        axios.defaults.baseURL = API_BASE;
+
+        document.getElementById('merchantForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await axios.post('/merchant/apply', {
+                    merchantName: document.getElementById('merchantName').value,
+                    contactPerson: document.getElementById('contactPerson').value,
+                    contactPhone: document.getElementById('contactPhone').value,
+                    address: document.getElementById('address').value,
+                    businessLicense: document.getElementById('businessLicense').value,
+                    description: document.getElementById('description').value
+                });
+                alert(response.data.msg);
+                if (response.data.code === 200) {
+                    e.target.reset();
+                }
+            } catch (error) {
+                alert('提交失败: ' + error.message);
+            }
+        });
+
+        async function loadCategories() {
+            try {
+                const response = await axios.get('/category/list');
+                const categories = response.data.data;
+                
+                const tbody = document.querySelector('#categoryTable tbody');
+                tbody.innerHTML = categories.map(cat => `
+                    <tr>
+                        <td>${cat.id}</td>
+                        <td>${cat.name}</td>
+                        <td>${cat.sort}</td>
+                        <td>
+                            <button onclick="deleteCategory(${cat.id})">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                const select = document.getElementById('dishCategory');
+                select.innerHTML = '<option value="">请选择分类</option>' +
+                    categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
+            } catch (error) {
+                console.error('加载分类失败:', error);
+            }
+        }
+
+        async function addCategory() {
+            const name = document.getElementById('categoryName').value;
+            const sort = document.getElementById('categorySort').value;
+            
+            if (!name) {
+                alert('请输入分类名称');
+                return;
+            }
+
+            try {
+                const response = await axios.post('/category/add', { name, sort });
+                alert(response.data.msg);
+                if (response.data.code === 200) {
+                    document.getElementById('categoryName').value = '';
+                    loadCategories();
+                }
+            } catch (error) {
+                alert('添加失败: ' + error.message);
+            }
+        }
+
+        async function deleteCategory(id) {
+            if (!confirm('确定要删除这个分类吗？')) return;
+            
+            try {
+                const response = await axios.delete(`/category/delete/${id}`);
+                alert(response.data.msg);
+                if (response.data.code === 200) {
+                    loadCategories();
+                }
+            } catch (error) {
+                alert('删除失败: ' + error.message);
+            }
+        }
+
+        let currentPage = 1;
+
+        async function loadDishes(page = 1) {
+            currentPage = page;
+            const searchName = document.getElementById('searchName').value;
+            
+            try {
+                const params = { pageNum: page, pageSize: 10 };
+                if (searchName) params.name = searchName;
+                
+                const response = await axios.get('/dish/list', { params });
+                const dishes = response.data.data;
+                
+                const tbody = document.querySelector('#dishTable tbody');
+                tbody.innerHTML = dishes.map(dish => `
+                    <tr>
+                        <td>${dish.id}</td>
+                        <td>${dish.name}</td>
+                        <td>${dish.categoryId}</td>
+                        <td>¥${dish.price}</td>
+                        <td>${dish.image ? `<img src="${dish.image}" width="50">` : '无'}</td>
+                        <td>${dish.status === 1 ? '上架' : '下架'}</td>
+                        <td>
+                            <button onclick="toggleStatus(${dish.id}, ${dish.status === 1 ? 0 : 1})">
+                                ${dish.status === 1 ? '下架' : '上架'}
+                            </button>
+                            <button onclick="deleteDish(${dish.id})">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                const pagination = document.getElementById('dishPagination');
+                pagination.innerHTML = `
+                    <button onclick="loadDishes(${page - 1})" ${page === 1 ? 'disabled' : ''}>上一页</button>
+                    <span>第 ${response.data.pageNum} / ${response.data.pages} 页，共 ${response.data.total} 条</span>
+                    <button onclick="loadDishes(${page + 1})" ${page >= response.data.pages ? 'disabled' : ''}>下一页</button>
+                `;
+            } catch (error) {
+                console.error('加载菜品失败:', error);
+            }
+        }
+
+        async function addDish() {
+            const name = document.getElementById('dishName').value;
+            const categoryId = document.getElementById('dishCategory').value;
+            const price = document.getElementById('dishPrice').value;
+            const description = document.getElementById('dishDescription').value;
+            const imageFile = document.getElementById('dishImage').files[0];
+
+            if (!name || !categoryId || !price) {
+                alert('请填写必填项');
+                return;
+            }
+
+            try {
+                let imageUrl = '';
+                if (imageFile) {
+                    const formData = new FormData();
+                    formData.append('file', imageFile);
+                    const uploadResponse = await axios.post('/file/upload', formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    imageUrl = uploadResponse.data.url;
+                }
+
+                const response = await axios.post('/dish/add', {
+                    name,
+                    categoryId: parseInt(categoryId),
+                    price: parseFloat(price),
+                    description,
+                    image: imageUrl
+                });
+
+                alert(response.data.msg);
+                if (response.data.code === 200) {
+                    document.getElementById('dishName').value = '';
+                    document.getElementById('dishPrice').value = '';
+                    document.getElementById('dishDescription').value = '';
+                    document.getElementById('dishImage').value = '';
+                    loadDishes(currentPage);
+                }
+            } catch (error) {
+                alert('添加失败: ' + error.message);
+            }
+        }
+
+        async function toggleStatus(id, status) {
+            try {
+                const response = await axios.post(`/dish/status/${id}/${status}`);
+                alert(response.data.msg);
+                if (response.data.code === 200) {
+                    loadDishes(currentPage);
+                }
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        async function deleteDish(id) {
+            if (!confirm('确定要删除这个菜品吗？')) return;
+            
+            try {
+                const response = await axios.delete(`/dish/delete/${id}`);
+                alert(response.data.msg);
+                if (response.data.code === 200) {
+                    loadDishes(currentPage);
+                }
+            } catch (error) {
+                alert('删除失败: ' + error.message);
+            }
+        }
+
+        window.onload = () => {
+            loadCategories();
+            loadDishes(1);
+        };
+    </script>
+</body>
+</html>

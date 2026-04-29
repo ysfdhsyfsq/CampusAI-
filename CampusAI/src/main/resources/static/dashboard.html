@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusAI 数据统计大屏</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-box {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .chart-box h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .chart {
+            width: 100%;
+            height: 350px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎓 CampusAI 智慧校园数据大屏</h1>
+    </div>
+
+    <div class="stats-cards">
+        <div class="stat-card">
+            <h3>总用户数</h3>
+            <div class="value" id="totalUsers">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>总订单数</h3>
+            <div class="value" id="totalOrders">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>订单总额</h3>
+            <div class="value" id="totalAmount">¥-</div>
+        </div>
+        <div class="stat-card">
+            <h3>自习室预约</h3>
+            <div class="value" id="totalReservations">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>活动总数</h3>
+            <div class="value" id="totalActivities">-</div>
+        </div>
+    </div>
+
+    <div class="charts-container">
+        <div class="chart-box">
+            <h2>📈 近30天用户注册趋势</h2>
+            <div id="userTrendChart" class="chart"></div>
+        </div>
+
+        <div class="chart-box">
+            <h2>🥧 各食堂/商家订单占比</h2>
+            <div id="orderDistributionChart" class="chart"></div>
+        </div>
+
+        <div class="chart-box">
+            <h2>📊 自习室时段使用率</h2>
+            <div id="roomUsageChart" class="chart"></div>
+        </div>
+
+        <div class="chart-box">
+            <h2>🏆 活动报名热度排行榜</h2>
+            <div id="activityRankingChart" class="chart"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/statistics';
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard`);
+                const data = await response.json();
+
+                updateStatsCards(data.realTimeStats);
+                renderUserTrendChart(data.userTrend);
+                renderOrderDistributionChart(data.orderDistribution);
+                renderRoomUsageChart(data.roomUsage);
+                renderActivityRankingChart(data.activityRanking);
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+
+        function updateStatsCards(stats) {
+            document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+            document.getElementById('totalOrders').textContent = stats.totalOrders?.total || 0;
+            document.getElementById('totalAmount').textContent = '¥' + (stats.totalOrders?.totalAmount || 0);
+            document.getElementById('totalReservations').textContent = stats.totalReservations || 0;
+            document.getElementById('totalActivities').textContent = stats.totalActivities || 0;
+        }
+
+        function renderUserTrendChart(data) {
+            const chart = echarts.init(document.getElementById('userTrendChart'));
+            const dates = data.map(item => item.date);
+            const counts = data.map(item => item.count);
+
+            const option = {
+                tooltip: { trigger: 'axis' },
+                xAxis: {
+                    type: 'category',
+                    data: dates,
+                    axisLabel: { rotate: 45 }
+                },
+                yAxis: { type: 'value' },
+                series: [{
+                    data: counts,
+                    type: 'line',
+                    smooth: true,
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(102, 126, 234, 0.8)' },
+                            { offset: 1, color: 'rgba(102, 126, 234, 0.2)' }
+                        ])
+                    },
+                    lineStyle: { color: '#667eea', width: 3 },
+                    itemStyle: { color: '#667eea' }
+                }]
+            };
+            chart.setOption(option);
+        }
+
+        function renderOrderDistributionChart(data) {
+            const chart = echarts.init(document.getElementById('orderDistributionChart'));
+            const option = {
+                tooltip: { trigger: 'item' },
+                legend: { orient: 'vertical', left: 'left' },
+                series: [{
+                    type: 'pie',
+                    radius: '60%',
+                    data: data,
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }]
+            };
+            chart.setOption(option);
+        }
+
+        function renderRoomUsageChart(data) {
+            const chart = echarts.init(document.getElementById('roomUsageChart'));
+            const times = data.map(item => item.name);
+            const values = data.map(item => item.value);
+
+            const option = {
+                tooltip: { trigger: 'axis' },
+                xAxis: {
+                    type: 'category',
+                    data: times,
+                    axisLabel: { rotate: 30 }
+                },
+                yAxis: { type: 'value' },
+                series: [{
+                    data: values,
+                    type: 'bar',
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#667eea' },
+                            { offset: 1, color: '#764ba2' }
+                        ])
+                    }
+                }]
+            };
+            chart.setOption(option);
+        }
+
+        function renderActivityRankingChart(data) {
+            const chart = echarts.init(document.getElementById('activityRankingChart'));
+            const names = data.map(item => item.name);
+            const values = data.map(item => item.value);
+
+            const option = {
+                tooltip: { trigger: 'axis' },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'value' },
+                yAxis: {
+                    type: 'category',
+                    data: names,
+                    axisLabel: { interval: 0 }
+                },
+                series: [{
+                    data: values,
+                    type: 'bar',
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
+                            { offset: 0, color: '#667eea' },
+                            { offset: 1, color: '#764ba2' }
+                        ])
+                    }
+                }]
+            };
+            chart.setOption(option);
+        }
+
+        window.addEventListener('load', loadDashboard);
+        setInterval(loadDashboard, 60000);
+    </script>
+</body>
+</html>

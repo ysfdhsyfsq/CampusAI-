@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ecommerce.campusai.mapper.DishMapper">
+
+    <resultMap id="DishResultMap" type="com.ecommerce.campusai.entity.Dish">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="price" property="price"/>
+        <result column="description" property="description"/>
+        <result column="image" property="image"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="merchant_name" property="merchantName"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="DishResultMap">
+        SELECT * FROM dish
+        <where>
+            status = 1
+            <if test="categoryId != null">AND category_id = #{categoryId}</if>
+            <if test="name != null and name != ''">AND name LIKE CONCAT('%',#{name},'%')</if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="findByMerchant" resultMap="DishResultMap">
+        SELECT * FROM dish
+        <where>
+            merchant_name = #{merchantName}
+            <if test="categoryId != null">AND category_id = #{categoryId}</if>
+            <if test="name != null and name != ''">AND name LIKE CONCAT('%',#{name},'%')</if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="findById" resultMap="DishResultMap">
+        SELECT * FROM dish WHERE id = #{id}
+    </select>
+
+    <insert id="addDish">
+        INSERT INTO dish(name, category_id, price, description, image, status, merchant_name)
+        VALUES(#{name}, #{categoryId}, #{price}, #{description}, #{image}, #{status}, #{merchantName})
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE dish SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <update id="updateDish">
+        UPDATE dish
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="image != null">image = #{image},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="merchantName != null">merchant_name = #{merchantName}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteDish">
+        DELETE FROM dish WHERE id = #{id}
+    </delete>
+
+</mapper>

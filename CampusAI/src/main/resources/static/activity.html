@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校园活动 - CampusAI</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 活动列表视图 */
+        .activity-list-view {
+            display: block;
+        }
+
+        .activity-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            background: #f9f9f9;
+            cursor: pointer;
+        }
+
+        .activity-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .activity-title {
+            font-size: 20px;
+            color: #333;
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .activity-title a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .activity-title a:hover {
+            text-decoration: underline;
+        }
+
+        .activity-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .type-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+
+        .type-lecture { background: #cce5ff; color: #004085; }
+        .type-competition { background: #d4edda; color: #155724; }
+        .type-club { background: #fff3cd; color: #856404; }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        /* 活动详情视图 */
+        .activity-detail-view {
+            display: none;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+
+        .detail-header h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            color: #333;
+            flex: 1;
+        }
+
+        .content {
+            line-height: 1.8;
+            color: #444;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .progress-section {
+            margin-top: 20px;
+        }
+
+        .progress-bar-detail {
+            width: 100%;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .enroll-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .enroll-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .enroll-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 40px;
+            color: #721c24;
+            background: #f8d7da;
+            border-radius: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 活动列表视图 -->
+        <div id="activityListView" class="activity-list-view">
+            <div class="header">
+                <h1>🎉 校园活动</h1>
+                <p>浏览并报名参加精彩的校园活动</p>
+            </div>
+            <div id="activityList">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 活动详情视图 -->
+        <div id="activityDetailView" class="activity-detail-view">
+            <a class="back-btn" onclick="showListView()">← 返回活动列表</a>
+            <div id="activityDetail">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API 基础路径
+        const API_BASE = '/activity';
+
+        // 显示活动列表视图
+        function showListView() {
+            document.getElementById('activityListView').style.display = 'block';
+            document.getElementById('activityDetailView').style.display = 'none';
+            loadActivityList();
+        }
+
+        // 显示活动详情视图
+        function showDetailView() {
+            document.getElementById('activityListView').style.display = 'none';
+            document.getElementById('activityDetailView').style.display = 'block';
+        }
+
+        // 加载活动列表
+        async function loadActivityList() {
+            const listContainer = document.getElementById('activityList');
+            listContainer.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                const response = await axios.get(`${API_BASE}/list`);
+                const activities = response.data;
+
+                if (activities && activities.length > 0) {
+                    let html = '';
+                    activities.forEach(activity => {
+                        const progressPercent = activity.maxNum > 0
+                            ? Math.round((activity.enrollNum / activity.maxNum) * 100)
+                            : 0;
+
+                        const typeTag = getTypeTag(activity.type);
+                        const statusClass = activity.status === 1 ? 'status-active' : 'status-expired';
+                        const statusText = activity.status === 1 ? '🟢 报名中' : '🔴 已截止';
+
+                        html += `
+                            <div class="activity-card" onclick="loadActivityDetail(${activity.id})">
+                                <h3 class="activity-title">
+                                    ${typeTag}
+                                    <a href="javascript:void(0)">${activity.title}</a>
+                                </h3>
+                                <div class="activity-meta">
+                                    <span>已报名：${activity.enrollNum}/${activity.maxNum} 人</span>
+                                    <span class="status ${statusClass}">${statusText}</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    listContainer.innerHTML = html;
+                } else {
+                    listContainer.innerHTML = `
+                        <div class="empty-state">
+                            <h3>暂无活动</h3>
+                            <p>当前没有可报名的活动，请稍后再来</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载活动列表失败:', error);
+                listContainer.innerHTML = `
+                    <div class="error-message">
+                        <h3>加载失败</h3>
+                        <p>无法获取活动列表，请稍后重试</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 加载活动详情
+        async function loadActivityDetail(id) {
+            showDetailView();
+            const detailContainer = document.getElementById('activityDetail');
+            detailContainer.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                const response = await axios.get(`${API_BASE}/${id}`);
+                const activity = response.data;
+
+                if (activity) {
+                    const progressPercent = activity.maxNum > 0
+                        ? Math.round((activity.enrollNum / activity.maxNum) * 100)
+                        : 0;
+
+                    const typeTag = getTypeTag(activity.type);
+                    const statusClass = activity.status === 1 ? 'status-active' : 'status-expired';
+                    const statusText = activity.status === 1 ? '🟢 报名中' : '🔴 已截止';
+                    const canEnroll = activity.status === 1 && activity.enrollNum < activity.maxNum;
+
+                    let html = `
+                        <div class="detail-header">
+                            <h1>
+                                ${activity.title}
+                                ${typeTag}
+                            </h1>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-item">
+                                <span class="info-label">报名情况：</span>
+                                <span class="info-value">${activity.enrollNum} / ${activity.maxNum} 人</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">活动状态：</span>
+                                <span class="info-value">
+                                    <span class="status-badge ${statusClass}">${statusText}</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="progress-section">
+                            <div class="info-label">报名进度</div>
+                            <div class="progress-bar-detail">
+                                <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="content">
+                            <h3>活动详情</h3>
+                            <p>${activity.content || '暂无详细介绍'}</p>
+                        </div>
+
+                        <button class="enroll-btn"
+                                onclick="enrollActivity(${activity.id})"
+                                ${!canEnroll ? 'disabled' : ''}>
+                            ${canEnroll ? '立即报名' : (activity.status !== 1 ? '报名已截止' : '报名已满员')}
+                        </button>
+                    `;
+                    detailContainer.innerHTML = html;
+                } else {
+                    detailContainer.innerHTML = `
+                        <div class="error-message">
+                            <h3>活动不存在</h3>
+                            <p>该活动可能已被删除</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载活动详情失败:', error);
+                detailContainer.innerHTML = `
+                    <div class="error-message">
+                        <h3>加载失败</h3>
+                        <p>无法获取活动详情，请稍后重试</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 报名参加活动
+        async function enrollActivity(id) {
+            if (!confirm('确定要报名参加这个活动吗？')) {
+                return;
+            }
+
+            try {
+                const response = await axios.post(`${API_BASE}/enroll/${id}`);
+                const message = response.data;
+
+                alert(message);
+
+                // 如果报名成功，重新加载详情
+                if (message === '报名成功') {
+                    await loadActivityDetail(id);
+                }
+            } catch (error) {
+                console.error('报名失败:', error);
+                alert('报名失败，请稍后重试');
+            }
+        }
+
+        // 获取类型标签
+        function getTypeTag(type) {
+            switch(type) {
+                case 'lecture':
+                    return '<span class="type-tag type-lecture">📚 讲座</span>';
+                case 'competition':
+                    return '<span class="type-tag type-competition">🏆 比赛</span>';
+                case 'club':
+                    return '<span class="type-tag type-club">🎭 社团</span>';
+                default:
+                    return '<span class="type-tag">📌 其他</span>';
+            }
+        }
+
+        // 页面加载时初始化
+        window.onload = function() {
+            loadActivityList();
+        };
+    </script>
+</body>
+</html>

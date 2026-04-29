@@ -1,0 +1,383 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusAI+ 智慧校园生活服务平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .username {
+            font-size: 1rem;
+        }
+
+        .logout-btn {
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 40px;
+            text-align: center;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .hero-section p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .services-grid {
+            max-width: 1400px;
+            margin: -50px auto 50px;
+            padding: 0 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .service-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .service-card h3 {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .service-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .stats-section {
+            max-width: 1400px;
+            margin: 0 auto 50px;
+            padding: 0 40px;
+        }
+
+        .stats-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 40px;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .ai-assistant-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+            z-index: 999;
+        }
+
+        .ai-assistant-float:hover {
+            transform: scale(1.1);
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .hero-section h1 {
+                font-size: 2rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/home.html" class="logo">🎓 CampusAI+</a>
+            <ul class="nav-menu">
+                <li><a href="/home.html">首页</a></li>
+                <li><a href="/restaurant.html">餐饮服务</a></li>
+                <li><a href="/study-room.html">自习室预约</a></li>
+                <li><a href="/activity.html">校园活动</a></li>
+                <li><a href="/ai-chat.html">AI助手</a></li>
+                <li><a href="/dashboard.html">数据大屏</a></li>
+            </ul>
+            <div class="user-info">
+                <span class="username" id="username">加载中...</span>
+                <button class="logout-btn" onclick="logout()">退出</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <h1>智慧校园生活服务平台</h1>
+        <p>整合校园餐饮、自习室预约、活动报名等功能，打造便捷的校园生活生态圈</p>
+    </section>
+
+    <div class="services-grid">
+        <a href="/restaurant.html" class="service-card">
+            <div class="service-icon">🍜</div>
+            <h3>校园餐饮</h3>
+            <p>浏览各大食堂美食，在线点餐，查看营养分析，享受智能推荐</p>
+        </a>
+
+        <a href="/study-room.html" class="service-card">
+            <div class="service-icon">📚</div>
+            <h3>自习室预约</h3>
+            <p>可视化日历预约，座位实时查询，智能冲突检测，便捷学习空间</p>
+        </a>
+
+        <a href="/activity.html" class="service-card">
+            <div class="service-icon">🎉</div>
+            <h3>校园活动</h3>
+            <p>讲座、比赛、社团活动发布与报名，精彩校园生活不错过</p>
+        </a>
+
+        <a href="/dashboard.html" class="service-card">
+            <div class="service-icon">📊</div>
+            <h3>数据统计</h3>
+            <p>实时数据可视化，用户趋势、订单分析、使用率统计一目了然</p>
+        </a>
+
+        <a href="/report.html" class="service-card">
+            <div class="service-icon">📄</div>
+            <h3>报表导出</h3>
+            <p>Excel月度运营报表、PDF活动统计报表，专业数据导出</p>
+        </a>
+
+        <a href="/merchant.html" class="service-card">
+            <div class="service-icon">🏪</div>
+            <h3>商家管理</h3>
+            <p>商家入驻申请、菜品管理、订单处理，一站式商户服务</p>
+        </a>
+
+        <a href="/ai-chat.html" class="service-card">
+            <div class="service-icon">🤖</div>
+            <h3>AI智能助手</h3>
+            <p>智能问答、菜品推荐、营养分析、活动咨询，7×24小时在线服务</p>
+        </a>
+    </div>
+
+    <section class="stats-section">
+        <h2>平台实时数据</h2>
+        <div class="stats-cards">
+            <div class="stat-card">
+                <h3>总用户数</h3>
+                <div class="value" id="totalUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>今日订单</h3>
+                <div class="value" id="todayOrders">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>活跃自习室</h3>
+                <div class="value" id="activeRooms">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>进行中活动</h3>
+                <div class="value" id="activeActivities">-</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="ai-assistant-float" onclick="openAIChat()" title="AI智能助手">
+        🤖
+    </div>
+
+    <footer>
+        <p>&copy; 2026 CampusAI+ 智慧校园生活服务平台 | 让校园生活更智能、更便捷</p>
+    </footer>
+
+    <script>
+        async function loadUserInfo() {
+            try {
+                const response = await axios.get('/user/currentUser');
+                if (response.data.code === 200) {
+                    document.getElementById('username').textContent = response.data.username;
+                } else {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+                window.location.href = '/login.html';
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await axios.get('/statistics/dashboard');
+                const stats = response.data.realTimeStats;
+                
+                document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+                document.getElementById('todayOrders').textContent = stats.totalOrders?.today || 0;
+                document.getElementById('activeRooms').textContent = stats.activeRooms || 0;
+                document.getElementById('activeActivities').textContent = stats.activeActivities || 0;
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                axios.post('/user/logout').then(() => {
+                    window.location.href = '/login.html';
+                }).catch(() => {
+                    window.location.href = '/login.html';
+                });
+            }
+        }
+
+        function openAIChat() {
+            window.location.href = '/ai-chat.html';
+        }
+
+        window.onload = () => {
+            loadUserInfo();
+            loadStats();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ecommerce.campusai.mapper.MerchantMapper">
+
+    <resultMap id="MerchantResultMap" type="com.ecommerce.campusai.entity.Merchant">
+        <id column="id" property="id"/>
+        <result column="merchant_name" property="merchantName"/>
+        <result column="contact_person" property="contactPerson"/>
+        <result column="contact_phone" property="contactPhone"/>
+        <result column="address" property="address"/>
+        <result column="business_license" property="businessLicense"/>
+        <result column="description" property="description"/>
+        <result column="logo" property="logo"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="reject_reason" property="rejectReason"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="MerchantResultMap">
+        SELECT * FROM merchant
+        <where>
+            <if test="status != null">AND status = #{status}</if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="findById" resultMap="MerchantResultMap">
+        SELECT * FROM merchant WHERE id = #{id}
+    </select>
+
+    <insert id="addMerchant" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO merchant(merchant_name, contact_person, contact_phone, address,
+                           business_license, description, logo, status)
+        VALUES(#{merchantName}, #{contactPerson}, #{contactPhone}, #{address},
+               #{businessLicense}, #{description}, #{logo}, #{status})
+    </insert>
+
+    <update id="updateMerchant">
+        UPDATE merchant
+        <set>
+            <if test="merchantName != null">merchant_name = #{merchantName},</if>
+            <if test="contactPerson != null">contact_person = #{contactPerson},</if>
+            <if test="contactPhone != null">contact_phone = #{contactPhone},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="businessLicense != null">business_license = #{businessLicense},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="logo != null">logo = #{logo},</if>
+            <if test="status != null">status = #{status},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE merchant
+        SET status = #{status},
+            <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteMerchant">
+        DELETE FROM merchant WHERE id = #{id}
+    </delete>
+
+</mapper>

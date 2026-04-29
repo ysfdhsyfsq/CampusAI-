@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusAI+ 智慧校园生活服务平台 - 完整功能验证</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+        }
+
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .module-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .module-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .module-content {
+            color: #555;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .feature-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: all 0.2s ease;
+        }
+
+        .feature-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .test-title {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .api-test {
+            margin: 20px 0;
+        }
+
+        .api-endpoint {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #28a745;
+        }
+
+        .endpoint-method {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+
+        .method-get {
+            background: #61affe;
+            color: white;
+        }
+
+        .method-post {
+            background: #49cc90;
+            color: white;
+        }
+
+        .method-put {
+            background: #fca130;
+            color: white;
+        }
+
+        .method-delete {
+            background: #f93e3e;
+            color: white;
+        }
+
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            color: #333;
+        }
+
+        .endpoint-desc {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.95rem;
+        }
+
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .link-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .link-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .link-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .link-desc {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .module-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 CampusAI+ 智慧校园生活服务平台</h1>
+            <p class="subtitle">完整功能验证中心 | 课程大作业设计方案</p>
+        </header>
+
+        <div class="module-grid">
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">1</div>
+                    <h3 class="module-title">项目架构搭建</h3>
+                </div>
+                <div class="module-content">
+                    <ul class="feature-list">
+                        <li class="feature-item">✓ 前后端分离架构设计</li>
+                        <li class="feature-item">✓ Maven多模块工程（parent + common + service + web）</li>
+                        <li class="feature-item">✓ MySQL数据库设计（8+核心表）</li>
+                        <li class="feature-item">✓ 开发环境配置（IDEA + MySQL 8.0 + Maven + Tomcat）</li>
+                    </ul>
+                    <span class="status-badge status-completed">已完成</span>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">2</div>
+                    <h3 class="module-title">校园餐饮管理</h3>
+                </div>
+                <div class="module-content">
+                    <ul class="feature-list">
+                        <li class="feature-item">✓ 商家入驻申请与信息审核</li>
+                        <li class="feature-item">✓ 菜品分类CRUD操作</li>
+                        <li class="feature-item">✓ 菜品图片上传功能</li>
+                        <li class="feature-item">✓ Zookeeper分布式配置管理</li>
+                        <li class="feature-item">✓ Axios前后端数据交互</li>
+                        <li class="feature-item">✓ PageHelper分页查询</li>
+                    </ul>
+                    <span class="status-badge status-completed">已完成</span>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">3</div>
+                    <h3 class="module-title">套餐与组合管理</h3>
+                </div>
+                <div class="module-content">
+                    <ul class="feature-list">
+                        <li class="feature-item">✓ 营养套餐创建（考研能量餐、减脂轻食等）</li>
+                        <li class="feature-item">✓ 套餐与菜品多对多关系</li>
+                        <li class="feature-item">✓ 套餐CRUD操作</li>
+                        <li class="feature-item">✓ 套餐状态管理（上架/下架）</li>
+                    </ul>
+                    <span class="status-badge status-completed">已完成</span>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">4</div>
+                    <h3 class="module-title">图片管理与缓存优化</h3>
+                </div>
+                <div class="module-content">
+                    <ul class="feature-list">
+                        <li class="feature-item">✓ Redis图片缓存（商家Logo、菜品图片、用户头像）</li>
+                        <li class="feature-item">✓ Redis热点数据缓存（热门套餐、首页推荐）</li>
+                        <li class="feature-item">✓ Redis可视化监控缓存命中率</li>
+                        <li class="feature-item">✓ Quartz定时任务清理无效图片</li>
+                    </ul>
+                    <span class="status-badge status-completed">已完成</span>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">5</div>
+                    <h3 class="module-title">自习室预约系统</h3>
+                </div>
+                <div class="module-content">
+                    <ul class="feature-list">
+                        <li class="feature-item">✓ Apache POI座位模板下载与批量导入</li>
+                        <li class="feature-item">✓ FullCalendar可视化预约界面</li>
+                        <li class="feature-item">✓ 时段设置（上午/下午/晚上）</li>
+                        <li class="feature-item">✓ 预约冲突检测机制</li>
+                        <li class="feature-item">✓ 最大预约时长与取消规则</li>
+                    </ul>
+                    <span class="status-badge status-completed">已完成</span>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">6</div>
+                    <h3 class="module-title">权限与安全</h3>
+                </div>
+                <div class="module-content">
+                    <ul class="feature-list">
+                        <li class="feature-item">✓ Spring Security RBAC权限模型</li>
+                        <li class="feature-item">✓ 三角色设计（超级管理员、商家管理员、普通用户）</li>
+                        <li class="feature-item">✓ 商家数据隔离（只能管理自己的菜品和订单）</li>
+                        <li class="feature-item">✓ 登录成功显示用户名</li>
+                        <li class="feature-item">✓ 记住我功能</li>
+                        <li class="feature-item">✓ 安全退出</li>
+                    </ul>
+                    <span class="status-badge status-completed">已完成</span>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">7</div>
+                    <h3 class="module-title">用户端登录</h3>
+                </div>
+                <div class="module-content">
+                    <ul class="feature-list">
+                        <li class="feature-item">✓ 手机验证码登录</li>
+                        <li class="feature-item">✓ 验证码5分钟有效（Redis存储）</li>
+                        <li class="feature-item">✓ 验证码防刷机制（60秒内不可重复发送）</li>
+                    </ul>
+                    <span class="status-badge status-completed">已完成</span>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">8</div>
+                    <h3 class="module-title">活动报名与页面静态化</h3>
+                </div>
+                <div class="module-content">
+                    <ul class="feature-list">
+                        <li class="feature-item">✓ 校园活动发布（讲座、比赛、社团活动）</li>
+                        <li class="feature-item">✓ 活动在线报名功能</li>
+                        <li class="feature-item">✓ FreeMarker静态化生成HTML</li>
+                        <li class="feature-item">✓ 活动发布时自动生成静态页</li>
+                        <li class="feature-item">✓ 报名截止时自动更新状态</li>
+                        <li class="feature-item">✓ Nginx直接访问静态页面</li>
+                    </ul>
+                    <span class="status-badge status-completed">已完成</span>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">9</div>
+                    <h3 class="module-title">数据统计大屏</h3>
+                </div>
+                <div class="module-content">
+                    <ul class="feature-list">
+                        <li class="feature-item">✓ ECharts数据可视化</li>
+                        <li class="feature-item">✓ 近30天用户注册趋势图（折线图）</li>
+                        <li class="feature-item">✓ 各食堂/商家订单占比（饼图）</li>
+                        <li class="feature-item">✓ 自习室时段使用率（柱状图）</li>
+                        <li class="feature-item">✓ 活动报名热度排行榜（横向条形图）</li>
+                        <li class="feature-item">✓ 运营数据实时统计接口</li>
+                    </ul>
+                    <span class="status-badge status-completed">已完成</span>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">10</div>
+                    <h3 class="module-title">报表导出</h3>
+                </div>
+                <div class="module-content">
+                    <ul class="feature-list">
+                        <li class="feature-item">✓ Apache POI导出Excel月度运营报表</li>
+                        <li class="feature-item">✓ 包含商家营收、订单量、退款率</li>
+                        <li class="feature-item">✓ JasperReports导出PDF活动报名统计报表</li>
+                        <li class="feature-item">✓ PDF带Logo和专业格式</li>
+                    </ul>
+                    <span class="status-badge status-completed">已完成</span>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">11</div>
+                    <h3 class="module-title">AI智能助手</h3>
+                </div>
+                <div class="module-content">
+                    <ul class="feature-list">
+                        <li class="feature-item">✓ 智能客服机器人（通义千问API）</li>
+                        <li class="feature-item">✓ 菜品智能推荐（协同过滤算法）</li>
+                        <li class="feature-item">✓ 营养健康分析（大模型+知识图谱）</li>
+                        <li class="feature-item">✓ 智能排课冲突检测</li>
+                        <li class="feature-item">✓ 活动智能摘要生成</li>
+                    </ul>
+                    <span class="status-badge status-completed">已完成</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">🔧 核心API接口验证</h2>
+
+            <div class="api-test">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">用户认证模块</h3>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/login/sendCode</span>
+                    <div class="endpoint-desc">发送手机验证码（防刷机制：60秒限制）</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/login/phone</span>
+                    <div class="endpoint-desc">手机验证码登录（验证码5分钟有效）</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/logout</span>
+                    <div class="endpoint-desc">安全退出登录</div>
+                </div>
+            </div>
+
+            <div class="api-test">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">商家管理模块</h3>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/merchant/apply</span>
+                    <div class="endpoint-desc">商家入驻申请</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/merchant/list</span>
+                    <div class="endpoint-desc">商家列表查询（支持分页）</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-put">PUT</span>
+                    <span class="endpoint-path">/api/merchant/audit/{id}</span>
+                    <div class="endpoint-desc">商家信息审核</div>
+                </div>
+            </div>
+
+            <div class="api-test">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">菜品管理模块</h3>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/dish/upload</span>
+                    <div class="endpoint-desc">菜品图片上传</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/dish/page</span>
+                    <div class="endpoint-desc">菜品分页查询（PageHelper）</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/dish/category/list</span>
+                    <div class="endpoint-desc">菜品分类列表</div>
+                </div>
+            </div>
+
+            <div class="api-test">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">套餐管理模块</h3>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/setmeal/create</span>
+                    <div class="endpoint-desc">创建营养套餐</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-put">PUT</span>
+                    <span class="endpoint-path">/api/setmeal/status/{id}</span>
+                    <div class="endpoint-desc">套餐上下架状态切换</div>
+                </div>
+            </div>
+
+            <div class="api-test">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">自习室预约模块</h3>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/seat/template/download</span>
+                    <div class="endpoint-desc">下载座位模板（Apache POI）</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/seat/import</span>
+                    <div class="endpoint-desc">批量导入座位信息</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/reservation/create</span>
+                    <div class="endpoint-desc">创建预约（含冲突检测）</div>
+                </div>
+            </div>
+
+            <div class="api-test">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">活动管理模块</h3>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/activity/publish</span>
+                    <div class="endpoint-desc">发布活动（触发静态化）</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/activity/list</span>
+                    <div class="endpoint-desc">活动列表查询</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/activity/register/{id}</span>
+                    <div class="endpoint-desc">活动报名</div>
+                </div>
+            </div>
+
+            <div class="api-test">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">数据统计模块</h3>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/statistics/user-trend</span>
+                    <div class="endpoint-desc">近30天用户注册趋势</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/statistics/order-pie</span>
+                    <div class="endpoint-desc">商家订单占比数据</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/statistics/room-usage</span>
+                    <div class="endpoint-desc">自习室时段使用率</div>
+                </div>
+            </div>
+
+            <div class="api-test">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">报表导出模块</h3>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/report/excel/monthly</span>
+                    <div class="endpoint-desc">导出Excel月度运营报表</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/report/pdf/activity</span>
+                    <div class="endpoint-desc">导出PDF活动报名统计报表</div>
+                </div>
+            </div>
+
+            <div class="api-test">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">AI智能助手模块</h3>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/ai/chat</span>
+                    <div class="endpoint-desc">智能客服对话（通义千问）</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/ai/recommend/dish</span>
+                    <div class="endpoint-desc">菜品智能推荐</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/ai/nutrition/analyze</span>
+                    <div class="endpoint-desc">营养健康分析</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/ai/schedule/check</span>
+                    <div class="endpoint-desc">排课冲突检测</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">🚀 快速访问入口</h2>
+            <div class="quick-links">
+                <a href="/dashboard.html" class="link-card">
+                    <div class="link-title">📊 数据统计大屏</div>
+                    <div class="link-desc">ECharts可视化数据展示</div>
+                </a>
+                <a href="/restaurant-management.html" class="link-card">
+                    <div class="link-title">🍜 餐饮管理后台</div>
+                    <div class="link-desc">商家与菜品管理</div>
+                </a>
+                <a href="/study-room-reservation.html" class="link-card">
+                    <div class="link-title">📚 自习室预约</div>
+                    <div class="link-desc">FullCalendar可视化预约</div>
+                </a>
+                <a href="/activity-list.html" class="link-card">
+                    <div class="link-title">🎉 活动报名</div>
+                    <div class="link-desc">校园活动列表与报名</div>
+                </a>
+                <a href="/project-architecture.html" class="link-card">
+                    <div class="link-title">🏗️ 项目架构</div>
+                    <div class="link-desc">系统架构与数据库设计</div>
+                </a>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 CampusAI+ 智慧校园生活服务平台 | 课程大作业完整功能验证中心</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">技术栈：Spring + SpringMVC + MyBatis + Zookeeper + Redis + Spring Security + Apache POI + FreeMarker + Quartz + ECharts + JasperReports</p>
+        </footer>
+    </div>
+</body>
+</html>

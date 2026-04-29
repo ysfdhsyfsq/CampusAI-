@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报表导出 - CampusAI</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .username {
+            font-size: 1rem;
+        }
+
+        .logout-btn {
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 40px;
+        }
+
+        .page-header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .page-header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .report-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .report-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .report-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .report-meta {
+            background: #f5f7fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .meta-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .meta-label {
+            color: #666;
+        }
+
+        .meta-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .export-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #67c23a;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #5daf34;
+        }
+
+        .btn-warning {
+            background: #e6a23c;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #cf9236;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #dcdfe6;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .preview-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .preview-title {
+            font-size: 1.3rem;
+            color: #333;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f5f7fa;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 2px solid #e4e7ed;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e4e7ed;
+            color: #666;
+        }
+
+        tbody tr:hover {
+            background: #f5f7fa;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-unit {
+            font-size: 1rem;
+            color: #999;
+            margin-left: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .container {
+                padding: 0 20px;
+            }
+
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-row {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/home.html" class="logo">🎓 CampusAI+</a>
+            <ul class="nav-menu">
+                <li><a href="/home.html">首页</a></li>
+                <li><a href="/restaurant.html">餐饮服务</a></li>
+                <li><a href="/study-room.html">自习室预约</a></li>
+                <li><a href="/activity.html">校园活动</a></li>
+                <li><a href="/ai-chat.html">AI助手</a></li>
+                <li><a href="/dashboard.html">数据大屏</a></li>
+            </ul>
+            <div class="user-info">
+                <span class="username" id="username">加载中...</span>
+                <button class="logout-btn" onclick="logout()">退出</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>📊 报表导出中心</h1>
+            <p>支持Excel和PDF格式的运营数据报表导出，助力数据分析与决策</p>
+        </div>
+
+        <!-- 实时统计 -->
+        <div class="stats-cards" id="statsCards">
+            <div class="stat-card">
+                <div class="stat-label">总用户数</div>
+                <div class="stat-value" id="totalUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">总订单数</div>
+                <div class="stat-value" id="totalOrders">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">总预约数</div>
+                <div class="stat-value" id="totalReservations">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">活动总数</div>
+                <div class="stat-value" id="totalActivities">-</div>
+            </div>
+        </div>
+
+        <!-- 报表卡片 -->
+        <div class="report-grid">
+            <!-- 月度运营报表 -->
+            <div class="report-card">
+                <div class="report-icon">📈</div>
+                <h2 class="report-title">月度运营报表</h2>
+                <p class="report-description">
+                    按月份统计各商家的订单数量、营收总额、退款率等关键指标，支持Excel格式导出
+                </p>
+
+                <div class="report-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">数据维度：</span>
+                        <span class="meta-value">商家维度</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">统计指标：</span>
+                        <span class="meta-value">订单数、营收、退款率</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">导出格式：</span>
+                        <span class="meta-value">Excel (.xlsx)</span>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label>选择月份</label>
+                            <input type="month" class="form-control" id="monthlyReportMonth" value="2026-04">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-options">
+                    <button class="btn btn-primary" onclick="previewMonthlyReport()">
+                        👁️ 预览数据
+                    </button>
+                    <button class="btn btn-success" onclick="exportMonthlyExcel()">
+                        📥 导出Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- 活动统计报表 -->
+            <div class="report-card">
+                <div class="report-icon">🎉</div>
+                <h2 class="report-title">活动统计报表</h2>
+                <p class="report-description">
+                    统计所有活动的报名情况、参与率、活动状态等信息，支持PDF格式导出
+                </p>
+
+                <div class="report-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">数据维度：</span>
+                        <span class="meta-value">活动维度</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">统计指标：</span>
+                        <span class="meta-value">报名人数、参与率、状态</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">导出格式：</span>
+                        <span class="meta-value">PDF (.pdf)</span>
+                    </div>
+                </div>
+
+                <div class="export-options" style="margin-top: 60px;">
+                    <button class="btn btn-primary" onclick="previewActivityReport()">
+                        👁️ 预览数据
+                    </button>
+                    <button class="btn btn-warning" onclick="exportActivityPdf()">
+                        📥 导出PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据预览区域 -->
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <div class="preview-header">
+                <h2 class="preview-title" id="previewTitle">数据预览</h2>
+                <button class="btn" onclick="closePreview()" style="background: #f5f7fa;">关闭预览</button>
+            </div>
+            <div class="table-container" id="previewTable">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <p>点击"预览数据"按钮查看报表内容</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 加载用户信息
+        async function loadUserInfo() {
+            try {
+                const response = await axios.get('/user/currentUser');
+                if (response.data.code === 200) {
+                    document.getElementById('username').textContent = response.data.username;
+                } else {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+                window.location.href = '/login.html';
+            }
+        }
+
+        // 加载实时统计数据
+        async function loadRealTimeStats() {
+            try {
+                const response = await axios.get('/statistics/realtime');
+                const stats = response.data;
+
+                document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+
+                const orderStats = stats.totalOrders || {};
+                document.getElementById('totalOrders').innerHTML = `
+                    ${orderStats.total || 0}<span class="stat-unit">单</span>
+                `;
+
+                document.getElementById('totalReservations').textContent = stats.totalReservations || 0;
+                document.getElementById('totalActivities').textContent = stats.totalActivities || 0;
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+
+        // 预览月度报表
+        async function previewMonthlyReport() {
+            const month = document.getElementById('monthlyReportMonth').value;
+
+            showPreviewSection('月度运营报表预览 - ' + month);
+
+            const previewTable = document.getElementById('previewTable');
+            previewTable.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                const response = await axios.get(`/report/preview/monthly?month=${month}`);
+                const data = response.data;
+
+                if (data && data.length > 0) {
+                    let html = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>商家名称</th>
+                                    <th>订单数量</th>
+                                    <th>营收总额</th>
+                                    <th>退款率</th>
+                                    <th>平均订单金额</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    data.forEach(item => {
+                        html += `
+                            <tr>
+                                <td>${item.merchantName || '-'}</td>
+                                <td>${item.orderCount || 0} 单</td>
+                                <td>¥${item.totalRevenue || 0}</td>
+                                <td>${item.refundRate ? (item.refundRate * 100).toFixed(2) + '%' : '0%'}</td>
+                                <td>¥${item.avgOrderAmount || 0}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += '</tbody></table>';
+                    previewTable.innerHTML = html;
+                } else {
+                    previewTable.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>该月份暂无数据</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('预览失败:', error);
+                previewTable.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <p>加载失败，请稍后重试</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 导出月度Excel报表
+        function exportMonthlyExcel() {
+            const month = document.getElementById('monthlyReportMonth').value;
+            const url = `/report/excel/monthly?month=${month}`;
+
+            // 创建隐藏的iframe来下载文件
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 3000);
+
+            alert('正在生成Excel报表，请稍候...');
+        }
+
+        // 预览活动报表
+        async function previewActivityReport() {
+            showPreviewSection('活动统计报表预览');
+
+            const previewTable = document.getElementById('previewTable');
+            previewTable.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                const response = await axios.get('/report/preview/activity');
+                const data = response.data;
+
+                if (data && data.length > 0) {
+                    let html = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>活动名称</th>
+                                    <th>最大人数</th>
+                                    <th>报名人数</th>
+                                    <th>报名率</th>
+                                    <th>结束时间</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    data.forEach(item => {
+                        html += `
+                            <tr>
+                                <td>${item.activityTitle || '-'}</td>
+                                <td>${item.maxNum || 0} 人</td>
+                                <td>${item.enrollNum || 0} 人</td>
+                                <td>${item.enrollRate ? (item.enrollRate * 100).toFixed(2) + '%' : '0%'}</td>
+                                <td>${item.endTime || '-'}</td>
+                                <td>${item.status || '-'}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += '</tbody></table>';
+                    previewTable.innerHTML = html;
+                } else {
+                    previewTable.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>暂无活动数据</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('预览失败:', error);
+                previewTable.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <p>加载失败，请稍后重试</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 导出活动PDF报表
+        function exportActivityPdf() {
+            const url = '/report/pdf/activity';
+
+            // 创建隐藏的iframe来下载文件
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 3000);
+
+            alert('正在生成PDF报表，请稍候...');
+        }
+
+        // 显示预览区域
+        function showPreviewSection(title) {
+            document.getElementById('previewSection').style.display = 'block';
+            document.getElementById('previewTitle').textContent = title;
+
+            // 滚动到预览区域
+            document.getElementById('previewSection').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        // 关闭预览
+        function closePreview() {
+            document.getElementById('previewSection').style.display = 'none';
+        }
+
+        // 退出登录
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                axios.post('/user/logout').then(() => {
+                    window.location.href = '/login.html';
+                }).catch(() => {
+                    window.location.href = '/login.html';
+                });
+            }
+        }
+
+        // 页面加载
+        window.onload = () => {
+            loadUserInfo();
+            loadRealTimeStats();
+        };
+    </script>
+</body>
+</html>

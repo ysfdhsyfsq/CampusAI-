@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusAI+ 自习室预约系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f7fa; }
+
+        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; height: 70px; }
+        .logo { color: white; font-size: 1.8rem; font-weight: bold; text-decoration: none; }
+        .nav-menu { display: flex; list-style: none; gap: 30px; }
+        .nav-menu a { color: white; text-decoration: none; font-size: 1rem; padding: 8px 15px; border-radius: 5px; transition: all 0.3s; }
+        .nav-menu a:hover, .nav-menu a.active { background: rgba(255,255,255,0.2); }
+        .user-info { display: flex; align-items: center; gap: 15px; color: white; }
+
+        .main-container { max-width: 1400px; margin: 30px auto; padding: 0 40px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; }
+        .sidebar { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); height: fit-content; }
+        .sidebar h3 { color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }
+
+        .room-list { list-style: none; }
+        .room-item { padding: 12px 15px; margin: 8px 0; border-radius: 8px; cursor: pointer; transition: all 0.3s; border: 2px solid #e0e0e0; }
+        .room-item:hover { border-color: #667eea; background: #f0f0ff; }
+        .room-item.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: #667eea; }
+        .room-name { font-weight: bold; margin-bottom: 5px; }
+        .room-info { font-size: 0.85rem; opacity: 0.8; }
+
+        .content-area { background: white; border-radius: 10px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .section-title { font-size: 1.5rem; color: #333; margin-bottom: 20px; }
+        #calendar { margin-top: 20px; }
+
+        .seat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin: 20px 0; }
+        .seat { padding: 15px; text-align: center; border-radius: 8px; cursor: pointer; transition: all 0.3s; border: 2px solid #e0e0e0; background: white; }
+        .seat:hover { transform: scale(1.05); border-color: #667eea; }
+        .seat.available { background: #d4edda; border-color: #28a745; }
+        .seat.occupied { background: #f8d7da; border-color: #dc3545; cursor: not-allowed; }
+        .seat.selected { background: #667eea; color: white; border-color: #667eea; }
+        .seat-number { font-weight: bold; font-size: 1.1rem; }
+        .seat-status { font-size: 0.75rem; margin-top: 5px; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; border-radius: 15px; padding: 30px; width: 500px; max-width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #667eea; }
+        .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #555; font-weight: 500; }
+        .form-group select, .form-group input { width: 100%; padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; }
+
+        .btn { padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: all 0.3s; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: #6c757d; }
+        .btn-danger { background: #dc3545; }
+
+        .reservation-list { margin-top: 20px; }
+        .reservation-item { padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .reservation-status { padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; }
+        .reservation-status.status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .reservation-status.status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .reservation-status.status-ended {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .legend { display: flex; gap: 20px; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .legend-color { width: 20px; height: 20px; border-radius: 4px; }
+
+        @media (max-width: 768px) { .main-container { grid-template-columns: 1fr; padding: 0 20px; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/home.html" class="logo">🎓 CampusAI+</a>
+            <ul class="nav-menu">
+                <li><a href="/home.html">首页</a></li>
+                <li><a href="/restaurant.html">餐饮服务</a></li>
+                <li><a href="/study-room.html" class="active">自习室预约</a></li>
+                <li><a href="/activity.html">校园活动</a></li>
+                <li><a href="/dashboard.html">数据大屏</a></li>
+            </ul>
+            <div class="user-info">
+                <span id="username">加载中...</span>
+                <button onclick="logout()" style="padding: 8px 20px; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; border-radius: 5px; cursor: pointer;">退出</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <h3>自习室列表</h3>
+            <ul class="room-list" id="roomList"></ul>
+
+            <h3 style="margin-top: 30px;">快捷操作</h3>
+            <div style="margin-top: 15px;">
+                <button class="btn" onclick="downloadTemplate()" style="width: 100%; margin-bottom: 10px;">📥 下载座位模板</button>
+                <button class="btn btn-secondary" onclick="showUploadModal()" style="width: 100%;">📤 批量导入座位</button>
+            </div>
+
+            <h3 style="margin-top: 30px;">图例说明</h3>
+            <div class="legend" style="margin-top: 15px;">
+                <div class="legend-item"><div class="legend-color" style="background: #d4edda;"></div><span>可选</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: #f8d7da;"></div><span>已预约</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: #667eea;"></div><span>已选择</span></div>
+            </div>
+        </aside>
+
+        <main class="content-area">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="section-title" id="currentRoom">请选择自习室</h2>
+                <button class="btn" onclick="showReservationModal()">➕ 新增预约</button>
+            </div>
+
+            <div id="calendar"></div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">我的预约记录</h3>
+            <div class="reservation-list" id="reservationList">
+                <p style="text-align: center; color: #999; padding: 40px;">暂无预约记录</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 预约弹窗 -->
+    <div class="modal" id="reservationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新增预约</h3>
+                <button class="close-btn" onclick="closeModal('reservationModal')">✕</button>
+            </div>
+            <form id="reservationForm">
+                <div class="form-group">
+                    <label>自习室</label>
+                    <select id="modalRoomId" required onchange="loadSeats()">
+                        <option value="">请选择自习室</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>选择座位</label>
+                    <div class="seat-grid" id="seatGrid">
+                        <p style="color: #999; grid-column: 1/-1;">请先选择自习室</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>时间段</label>
+                    <select id="timeSlot" required>
+                        <option value="">请选择时间段</option>
+                        <option value="morning">上午 08:00-12:00</option>
+                        <option value="afternoon">下午 14:00-18:00</option>
+                        <option value="night">晚上 19:00-22:00</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">确认预约</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 上传弹窗 -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>批量导入座位</h3>
+                <button class="close-btn" onclick="closeModal('uploadModal')">✕</button>
+            </div>
+            <div style="padding: 20px; text-align: center; border: 2px dashed #667eea; border-radius: 8px; cursor: pointer;" onclick="document.getElementById('fileInput').click()">
+                <p>点击选择 Excel 文件 (.xlsx / .xls)</p>
+            </div>
+            <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;" onchange="uploadSeats(this)">
+            <div id="uploadResult" style="margin-top: 15px; padding: 10px; border-radius: 5px; display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let selectedRoom = null;
+        let selectedSeat = null;
+        let calendar = null;
+        let rooms = [];
+        let seats = [];
+
+        async function loadUserInfo() {
+            try {
+                const response = await axios.get('/user/currentUser');
+                console.log('用户信息:', response.data);
+                if (response.data.code === 200) {
+                    currentUser = response.data;
+                    document.getElementById('username').textContent = response.data.username;
+                } else {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                window.location.href = '/login.html';
+            }
+        }
+
+        async function loadRooms() {
+            try {
+                const response = await axios.get('/room/list');
+                rooms = response.data || [];
+                console.log('自习室数据:', rooms);
+
+                const roomList = document.getElementById('roomList');
+                const modalRoomSelect = document.getElementById('modalRoomId');
+
+                if (rooms.length === 0) {
+                    roomList.innerHTML = '<li style="padding: 20px; text-align: center; color: #999;">暂无自习室数据</li>';
+                    return;
+                }
+
+                roomList.innerHTML = rooms.map(room => `
+                    <li class="room-item" data-id="${room.id}" onclick="selectRoom(${room.id}, '${room.roomName}')">
+                        <div class="room-name">${room.roomName}</div>
+                        <div class="room-info">容量：${room.totalSeat || 0}人 | ${room.status === 1 ? '开放中' : '维护中'}</div>
+                    </li>
+                `).join('');
+
+                modalRoomSelect.innerHTML = '<option value="">请选择自习室</option>' +
+                    rooms.map(room => `<option value="${room.id}">${room.roomName}</option>`).join('');
+
+                if (rooms.length > 0) {
+                    selectRoom(rooms[0].id, rooms[0].roomName);
+                }
+            } catch (error) {
+                console.error('加载自习室失败:', error);
+            }
+        }
+
+        function selectRoom(roomId, roomName) {
+            selectedRoom = roomId;
+            document.getElementById('currentRoom').textContent = roomName || '未命名自习室';
+
+            document.querySelectorAll('.room-item').forEach(item => item.classList.remove('active'));
+            const activeItem = document.querySelector(`.room-item[data-id="${roomId}"]`);
+            if (activeItem) activeItem.classList.add('active');
+
+            loadSeats();
+            loadCalendarEvents();
+        }
+
+        async function loadSeats() {
+            const roomId = document.getElementById('modalRoomId').value || selectedRoom;
+            if (!roomId) {
+                document.getElementById('seatGrid').innerHTML = '<p style="color: #999; grid-column: 1/-1;">请先选择自习室</p>';
+                return;
+            }
+
+            try {
+                const response = await axios.get(`/seat/list/${roomId}`);
+                seats = response.data || [];
+                console.log('座位数据:', seats);
+                renderSeats();
+            } catch (error) {
+                console.error('加载座位失败:', error);
+            }
+        }
+
+        function renderSeats() {
+            const seatGrid = document.getElementById('seatGrid');
+            seatGrid.innerHTML = seats.map(seat => {
+                const isOccupied = seat.status === 1;
+                const isSelected = selectedSeat === seat.id;
+                return `
+                    <div class="seat ${isOccupied ? 'occupied' : 'available'} ${isSelected ? 'selected' : ''}"
+                         onclick="selectSeat(${seat.id}, '${seat.seatCode}', ${seat.status})">
+                        <div class="seat-number">${seat.seatCode}</div>
+                        <div class="seat-status">${isOccupied ? '已预约' : '可选'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectSeat(seatId, seatCode, status) {
+            if (status === 1) {
+                alert('该座位已被预约');
+                return;
+            }
+            selectedSeat = seatId;
+            renderSeats();
+        }
+
+        function initCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'zh-cn',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
+                events: '/reserve/calendar/events',
+                eventClick: function(info) { alert('预约详情：' + info.event.title); }
+            });
+            calendar.render();
+        }
+
+        function loadCalendarEvents() {
+            if (calendar) calendar.refetchEvents();
+        }
+
+        async function loadReservations() {
+            if (!currentUser || !currentUser.id) {
+                console.log('用户未登录或 ID 为空，等待加载...');
+                return;
+            }
+
+            try {
+                console.log('加载预约记录，用户ID:', currentUser.id);
+                const response = await axios.get(`/reserve/list/${currentUser.id}`);
+                const reservations = response.data || [];
+                console.log('预约记录:', reservations);
+
+                const list = document.getElementById('reservationList');
+                if (reservations.length === 0) {
+                    list.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">暂无预约记录</p>';
+                    return;
+                }
+
+                list.innerHTML = reservations.map(res => {
+                    // 动态判断状态
+                    let statusText = '';
+                    let statusClass = '';
+                    let showCancelButton = false;
+
+                    if (res.status === 0) {
+                        statusText = '已取消';
+                        statusClass = 'status-cancelled';
+                    } else if (res.status === 2) {
+                        statusText = '已结束';
+                        statusClass = 'status-cancelled';
+                    } else {
+                        // status === 1，需要检查是否已结束
+                        const now = new Date();
+                        const endTime = new Date(res.endTime);
+
+                        if (endTime < now) {
+                            statusText = '已结束';
+                            statusClass = 'status-cancelled';
+                        } else {
+                            statusText = '进行中';
+                            statusClass = 'status-active';
+                            showCancelButton = true;
+                        }
+                    }
+
+                    return `
+                        <div class="reservation-item">
+                            <div class="reservation-info">
+                                <strong>${res.seatCode || '座位' + res.seatId}</strong> - ${res.timeSlot}
+                                <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                                    ${res.startTime || ''} 至 ${res.endTime || ''}
+                                </div>
+                            </div>
+                            <div>
+                                <span class="reservation-status ${statusClass}">
+                                    ${statusText}
+                                </span>
+                                ${showCancelButton ? `<button class="btn btn-danger" style="margin-left: 10px; padding: 6px 12px; font-size: 0.85rem;" onclick="cancelReservation(${res.id})">取消</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('加载预约记录失败:', error);
+            }
+        }
+
+        function showReservationModal() {
+            document.getElementById('reservationModal').classList.add('show');
+        }
+
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        document.getElementById('reservationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const roomId = document.getElementById('modalRoomId').value;
+            const timeSlot = document.getElementById('timeSlot').value;
+
+            if (!selectedSeat) { alert('请选择座位'); return; }
+            if (!roomId || !timeSlot) { alert('请填写完整信息'); return; }
+
+            try {
+                const reservation = {
+                    userId: currentUser.id,
+                    roomId: parseInt(roomId),
+                    seatId: selectedSeat,
+                    timeSlot: timeSlot,
+                    status: 1
+                };
+
+                console.log('提交预约数据:', reservation);
+                const response = await axios.post('/reserve/add', reservation);
+
+                if (response.data === '预约成功') {
+                    alert('预约成功！');
+                    closeModal('reservationModal');
+                    loadSeats();
+                    loadReservations();
+                    loadCalendarEvents();
+                    selectedSeat = null;
+                    document.getElementById('reservationForm').reset();
+                } else {
+                    alert(response.data);
+                }
+            } catch (error) {
+                console.error('预约失败:', error);
+                alert('预约失败：' + (error.response?.data || error.message));
+            }
+        });
+
+        async function cancelReservation(reservationId) {
+            if (!confirm('确定要取消这个预约吗？')) return;
+            try {
+                const response = await axios.put(`/reserve/cancel/${reservationId}`);
+                alert(response.data);
+                loadReservations();
+                loadCalendarEvents();
+            } catch (error) {
+                alert('取消失败：' + error.message);
+            }
+        }
+
+        async function downloadTemplate() {
+            try {
+                const response = await axios.get('/seat/template', { responseType: 'blob' });
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', '座位模板.xlsx');
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            } catch (error) {
+                alert('下载失败：' + error.message);
+            }
+        }
+
+        async function uploadSeats(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const response = await axios.post('/seat/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                const resultDiv = document.getElementById('uploadResult');
+                resultDiv.style.display = 'block';
+                resultDiv.style.background = response.data.includes('成功') ? '#d4edda' : '#f8d7da';
+                resultDiv.style.color = response.data.includes('成功') ? '#155724' : '#721c24';
+                resultDiv.textContent = response.data;
+                if (response.data.includes('成功')) loadSeats();
+            } catch (error) {
+                alert('上传失败：' + error.message);
+            }
+        }
+
+        function logout() {
+            if (confirm('确定要退出登录吗？')) window.location.href = '/login.html';
+        }
+
+        window.onload = () => {
+            loadUserInfo();
+            loadRooms();
+            initCalendar();
+            // 延迟加载预约记录，确保用户信息已获取
+            setTimeout(loadReservations, 1000);
+        };
+    </script>
+</body>
+</html>
